@@ -1,65 +1,50 @@
 const { test, expect } = require('@playwright/test');
 
+// ข้อมูลสำหรับทดสอบ
+const testCases = {
+    valid: { username: 'student', password: 'Password123', expectedHeading: 'Logged In Successfully', expectError: false },
+    invalidUsername: { username: 'incorrectUser', password: 'Password123', expectedError: 'Your username is invalid!', expectError: true },
+    invalidPassword: { username: 'student', password: 'incorrectPassword', expectedError: 'Your password is invalid!', expectError: true }
+};
+
+// ฟังก์ชันสำหรับล็อกอิน
+async function login(page, username, password) {
+    await page.fill('#username', username);
+    await page.fill('#password', password);
+    
+    await page.getByRole('button', { name: 'Submit' }).click();
+}
+
 test.beforeEach(async ({ page }) => {
     await page.goto('https://practicetestautomation.com/practice-test-login/');
 });
 
+test('TC01 - Successful Login', async ({ page }) => {
+    const { username, password, expectedHeading } = testCases.valid;
+    await login(page, username, password);
 
-test('TC01', async ({ page }) => {
-    // await page.goto('https://practicetestautomation.com/practice-test-login/');
-    await page.locator('#username').fill('student');
-    await page.locator('#password').fill('Password123');
+    const heading = await page.locator('h1');
+    await expect(heading).toHaveText(expectedHeading);
 
+    await page.screenshot({ path: './tests/screenshot_login_success.png' });
+});
 
+test('TC02 - Invalid Username', async ({ page }) => {
+    const { username, password, expectedError } = testCases.invalidUsername;
+    await login(page, username, password);
 
-    // await page.getByLabel('Username').fill('student');
-    // await page.getByLabel('Password').fill('Password123');
-    await page.getByRole('button', { name: 'Submit' }).click();
+    const error = page.locator('#error');
+    await expect(error).toHaveText(expectedError);
 
-    // await page.getByRole('heading', { name: 'Logged In Successfully' });
+    await page.screenshot({ path: './tests/screenshot_invalid_username.png' });
+});
 
+test('TC03 - Invalid Password', async ({ page }) => {
+    const { username, password, expectedError } = testCases.invalidPassword;
+    await login(page, username, password);
 
-    // await expect(page).toHaveURL('https://practicetestautomation.com/logged-in-successfully/');
-    await expect(page.locator('h1')).toHaveText('Logged In Successfully');
+    const error = page.locator('#error');
+    await expect(error).toHaveText(expectedError);
 
-    // getByRole('heading', { name: 'Logged In Successfully' })
-    // await page.screenshot({ path: "screenshot_login.png" });
-    await page.screenshot({ path: "./tests/screenshot_login.png" });
-
-})
-
-test('TC02', async ({ page }) => {
-    // await page.goto('https://practicetestautomation.com/practice-test-login/');
-    await page.locator('#username').fill('incorrectUser ');
-    await page.locator('#password').fill('Password123');
-
-
-
-    // await page.getByLabel('Username').fill('student');
-    // await page.getByLabel('Password').fill('Password123');
-    await page.getByRole('button', { name: 'Submit' }).click();
-
-    // await page.getByRole('heading', { name: 'Logged In Successfully' });
-
-    await expect(page.locator('#error')).toHaveText('Your username is invalid!');
-
-})
-
-test('TC03', async ({ page }) => {
-
-    // await page.goto('https://practicetestautomation.com/practice-test-login/');
-    // await page.locator('#username').fill('incorrectUser ');
-    // await page.locator('#password').fill('Password123');
-
-    await page.getByLabel('Username').fill('student');
-    await page.getByLabel('Password').fill('incorrectPassword');
-    await page.getByRole('button', { name: 'Submit' }).click();
-
-    // await page.getByRole('heading', { name: 'Logged In Successfully' });
-
-    // await expect(page.locator('#error')).toHaveText('Your password is invalid!');
-    await expect(page.getByText('Your username is invalid!')).toHaveText('Your username is invalid!');
-
-    // await page.screenshot({ path: "./tests/screenshot_login.png" });
-
-})
+    await page.screenshot({ path: './tests/screenshot_invalid_password.png' });
+});
